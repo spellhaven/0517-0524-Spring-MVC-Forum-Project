@@ -60,6 +60,7 @@ public class BDao {
 				int bId = rs.getInt("bid");
 				String bName = rs.getString("bname");
 				String bTitle = rs.getString("btitle");
+				String bContent = rs.getString("bcontent");
 				Timestamp bDate = rs.getTimestamp("bdate"); // 이 Timestamp는 java.sql이야... 크킄... 다른 소속 Timestamp 아니여...
 				int bHit = rs.getInt("bhit");
 				int bGroup = rs.getInt("bgroup");
@@ -67,7 +68,7 @@ public class BDao {
 				int bIndent = rs.getInt("bindent");
 				
 				// 값이 9개나 되는데 세터로 어떻게 해 귀찮게. BDto 생성자 만들어 두길 잘 했다.
-				BDto dto = new BDto(bId, bName, bTitle, bDate, bHit, bGroup, bStep, bIndent);
+				BDto dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
 				dtos.add(dto);
 			}
 						
@@ -131,8 +132,224 @@ public class BDao {
 			}
 		}
 	}
-	
 
+
+	public BDto content_view(String cid) { // DB의 bid랑 이름이 겹쳐서 헷갈릴까 봐 바꿈, ㅋ.
+	// 왜 리턴형이 BDto인가? 글 제목을 누르면 그 글 '하나만' 보여 줘야 하니까. (잘 모르겠으면 항복해라, ㅋ)
+		
+		upHit(cid); // 얘는 해당 글이 호출될 때마다 조회수 1씩 늘려 주는 놈이야. 바로 이 BDao 하단에 있다.
+		
+		BDto dto = null;
+		
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		try { // DB에 데이터 넣는 건 나름 위험하니까 try-catch 해야 한디.
+			
+			conn = dataSource.getConnection();
+			String query = "SELECT * FROM mvc_board WHERE bid = ?";
+			
+			pstmt = conn.prepareStatement(query);
+			pstmt.setString(1, cid);
+			// pstmt.setInt(1, Integer.parseInt(cid)); // 이래야지 들어온 cid가 숫자로 바뀌는데, 우리가 실수로 DB에서 bid를 NUMBER로 안 하고 VARCHAR로 해 버렸다 ㅋ 원랜 이렇게 해야 한다. ㅋ.
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) {
+				// "필드명" 틀리지 마, ㅋ, 오라클 DB 테이블이랑 딱딱 맞춰.
+				int bId = rs.getInt("bid");
+				String bName = rs.getString("bname");
+				String bTitle = rs.getString("btitle");
+				String bContent = rs.getString("bcontent");
+				Timestamp bDate = rs.getTimestamp("bdate"); 
+				int bHit = rs.getInt("bhit");
+				int bGroup = rs.getInt("bgroup");
+				int bStep = rs.getInt("bstep");
+				int bIndent = rs.getInt("bindent");
+				
+				dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(rs != null) {
+					rs.close();
+				}
+				if(pstmt != null) {
+					pstmt.close();
+				}
+				if(conn != null) {
+					conn.close();
+				}		
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return dto;
+		
+	}
+
+	
+	// 글 수정해 주는 놈
+	public void modify(String bid, String bname, String btitle, String bcontent) {
+		
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		
+		try { // DB에 데이터 넣는 건 나름 위험하니까 try-catch 해야 한디.
+			
+			conn = dataSource.getConnection();
+			String query = "UPDATE mvc_board SET bname = ?, btitle = ?, bcontent = ? where bid = ?";
+			
+			pstmt = conn.prepareStatement(query);
+			
+			pstmt.setString(1, bname); 
+			pstmt.setString(2, btitle); 
+			pstmt.setString(3, bcontent);
+			pstmt.setString(4, bid); // bid는 1번이 아니라 4번이야. setString은 쿼리의 ?를 순서대로 채워 주는 거임;; modify의 파라미터 순서와는 상관 x
+			
+			pstmt.executeUpdate();
+			
+						
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(pstmt != null) {
+					pstmt.close();
+				}
+				if(conn != null) {
+					conn.close();
+				}		
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+
+	// 쉿. 그 놈, 담가줄게.
+	public void delete(String bid) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		
+		try { // DB에 데이터 넣는 건 나름 위험하니까 try-catch 해야 한디.
+			
+			conn = dataSource.getConnection();
+			String query = "DELETE FROM mvc_board where bid=?";
+			
+			pstmt = conn.prepareStatement(query);
+			pstmt.setString(1, bid); 
+			pstmt.executeUpdate();
+			
+						
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(pstmt != null) {
+					pstmt.close();
+				}
+				if(conn != null) {
+					conn.close();
+				}		
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	
+	// 글 누를 때마다(content_view가 실행될 때마다) 해당 글 조회수 늘려 주는 메서드... 인데 이름이 모 가상화폐 회사 같아서 기분이 썩 좃치안내
+	public void upHit(String bid) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		
+		try { // DB에 데이터 넣는 건 나름 위험하니까 try-catch 해야 한디.
+			
+			conn = dataSource.getConnection();
+			String query = "UPDATE mvc_board SET bhit = bhit+1 where bid = ?";
+			// 이 쿼리문을 쓰는 덴 여러 방법이 있다. 근데 bhit 가져왔다가 다시 bhit+1 넣어 주는 건 너무 귀찮으니까, 걍 야! 너 +1 해!! (네 알겠습니다.) 하고 수식으로 만들었다.
+			
+			pstmt = conn.prepareStatement(query);
+			pstmt.setString(1, bid); 
+			pstmt.executeUpdate();
+			
+						
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(pstmt != null) {
+					pstmt.close();
+				}
+				if(conn != null) {
+					conn.close();
+				}		
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+
+	public BDto reply_view(String bid) {
+		
+		BDto dto = null;
+		
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		try { // DB에 데이터 넣는 건 나름 위험하니까 try-catch 해야 한디.
+			
+			conn = dataSource.getConnection();
+			String query = "SELECT * FROM mvc_board WHERE bid = ?";
+			
+			pstmt = conn.prepareStatement(query);
+			pstmt.setString(1, cid);
+			// pstmt.setInt(1, Integer.parseInt(cid)); // 이래야지 들어온 cid가 숫자로 바뀌는데, 우리가 실수로 DB에서 bid를 NUMBER로 안 하고 VARCHAR로 해 버렸다 ㅋ 원랜 이렇게 해야 한다. ㅋ.
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) {
+				// "필드명" 틀리지 마, ㅋ, 오라클 DB 테이블이랑 딱딱 맞춰.
+				int bId = rs.getInt("bid");
+				String bName = rs.getString("bname");
+				String bTitle = rs.getString("btitle");
+				String bContent = rs.getString("bcontent");
+				Timestamp bDate = rs.getTimestamp("bdate"); 
+				int bHit = rs.getInt("bhit");
+				int bGroup = rs.getInt("bgroup");
+				int bStep = rs.getInt("bstep");
+				int bIndent = rs.getInt("bindent");
+				
+				dto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(rs != null) {
+					rs.close();
+				}
+				if(pstmt != null) {
+					pstmt.close();
+				}
+				if(conn != null) {
+					conn.close();
+				}		
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return dto;		
+	}
 	
 	
 }

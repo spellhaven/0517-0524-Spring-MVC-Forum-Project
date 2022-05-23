@@ -30,14 +30,14 @@
 			<tr>
 				<td>${dto.bid}</td>
 				<td>${dto.bname}</td>
-				<td>${dto.btitle}</td>
+				<td><a href = "content_view?bid=${dto.bid}">${dto.btitle}</a></td> <!-- 글 제목 누르면 그 글의 내용으로 가게, ㅋ -->
 				<td>${dto.bdate}</td>
 				<td>${dto.bhit}</td>
 			</tr>
 		</c:forEach>
 		
 		<tr>
-			<!-- a href로 하니까 못생겼다, 버튼으로 만들고 싶다. (그런데 그러면 colspan은 어떻게 해야...) -->
+			<!-- a href로 하니까 못생겼다, 버튼으로 만들고 싶다. (그런데 그러면 colspan은 어떻게 해야... "그냥 참아라") -->
 			<td colspan = "5" align = "right"><a href = "write_form">글 쓰기? 나는 글이 달기만 하다</a></td>
 		</tr>
 		
