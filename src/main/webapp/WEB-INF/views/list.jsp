@@ -10,7 +10,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>다른 사람들이 모두 에러 날 때 나만 안 나면, 우월감을 얻을 수 있다</title>
+<title>다른 사람들이 모두 에러 날 때, 나만 안 나면 우월감을 얻을 수 있다</title>
 </head>
 <body>
 	<h2>자유 게시판 글 목록</h2>
@@ -35,6 +35,12 @@
 				<td>${dto.bhit}</td>
 			</tr>
 		</c:forEach>
+		
+		<tr>
+			<!-- a href로 하니까 못생겼다, 버튼으로 만들고 싶다. (그런데 그러면 colspan은 어떻게 해야...) -->
+			<td colspan = "5" align = "right"><a href = "write_form">글 쓰기? 나는 글이 달기만 하다</a></td>
+		</tr>
+		
 	
 	</table>
 
