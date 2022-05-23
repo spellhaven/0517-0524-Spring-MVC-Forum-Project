@@ -297,7 +297,7 @@ public class BDao {
 	}
 
 
-	public BDto reply_view(String bid) {
+	public BDto reply_view(String cid) { // 어어 왜 bid로 하면 않되더라? 하하. 깜찍이 대가리 힘 다 떨어졌어.
 		
 		BDto dto = null;
 		
@@ -312,7 +312,6 @@ public class BDao {
 			
 			pstmt = conn.prepareStatement(query);
 			pstmt.setString(1, cid);
-			// pstmt.setInt(1, Integer.parseInt(cid)); // 이래야지 들어온 cid가 숫자로 바뀌는데, 우리가 실수로 DB에서 bid를 NUMBER로 안 하고 VARCHAR로 해 버렸다 ㅋ 원랜 이렇게 해야 한다. ㅋ.
 			rs = pstmt.executeQuery();
 			
 			if(rs.next()) {
@@ -352,7 +351,9 @@ public class BDao {
 	}
 	
 	
-}
+
+}	
+	
 
 
 

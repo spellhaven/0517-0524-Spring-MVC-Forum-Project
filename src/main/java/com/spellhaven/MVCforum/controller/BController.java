@@ -11,6 +11,7 @@ import com.spellhaven.MVCforum.command.BContentCommand;
 import com.spellhaven.MVCforum.command.BDeleteCommand;
 import com.spellhaven.MVCforum.command.BListCommand;
 import com.spellhaven.MVCforum.command.BModifyCommand;
+import com.spellhaven.MVCforum.command.BReplyCommand;
 import com.spellhaven.MVCforum.command.BReplyViewCommand;
 import com.spellhaven.MVCforum.command.BWriteCommand;
 
@@ -116,10 +117,18 @@ public class BController {
 		command = new BReplyViewCommand();
 		command.execute(model);
 		
-		
 		return "reply_view";
 	}
 	
+	@RequestMapping("/reply") 
+	public String reply(HttpServletRequest request, Model model) {
+		model.addAttribute("request", request);
+		
+		command = new BReplyCommand();
+		command.execute(model);
+		
+		return "redirect:list";
+	}
 }
 
 
